@@ -9,7 +9,8 @@ databaseChangeLog:
               - column:
                   name: id
                   type: INT
-                  constraints: { primaryKey: true, nullable: false, autoIncrement: true }
+                  autoIncrement: true
+                  constraints: { primaryKey: true, nullable: false }
               - column:
                   name: base_code
                   type: CHAR(3)

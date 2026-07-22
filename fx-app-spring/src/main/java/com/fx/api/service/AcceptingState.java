@@ -9,5 +9,5 @@ public class AcceptingState {
     private final AtomicBoolean accepting = new AtomicBoolean(true);
 
     public boolean isAccepting() { return accepting.get(); }
-    public boolean set(boolean value) { return accepting.set(value); }
+    public boolean set(boolean value) { accepting.set(value); return value; }
 }
