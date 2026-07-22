@@ -1,7 +1,7 @@
 # FX exchange — Week 2 Day 3
 
-**Name:** Your Name Here
+**Name:** Justina
 
-| Folder | What it is | Built by |
-|---|---|---|
-| `fx-app-spring/` | the API and its database | me |
+| Folder           | What it is               | Built by |
+| ---------------- | ------------------------ | -------- |
+| `fx-app-spring/` | the API and its database | me       |
