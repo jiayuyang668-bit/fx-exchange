@@ -1,14 +1,18 @@
 package com.fx.api.repo;
 
+import com.fx.api.model.IncomingRate;
 import com.fx.api.model.Rate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-/** Deck 03 Spring JDBC — JdbcTemplate over the Week-1 fxdb schema. */
 @Repository
 public class RateRepository {
 
@@ -16,26 +20,39 @@ public class RateRepository {
 
     private static final RowMapper<Rate> MAPPER = (rs, n) -> new Rate(
             rs.getInt("id"), rs.getString("base_code"), rs.getString("quote_code"),
-            rs.getDouble("rate"), rs.getDate("rate_date").toLocalDate());
+            rs.getDouble("rate"), rs.getDate("rate_date").toLocalDate(),
+            toLocalDateTime(rs.getTimestamp("captured_at")));
 
-    public RateRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }   // constructor injection
+    private static LocalDateTime toLocalDateTime(Timestamp ts) {
+        return ts != null ? ts.toLocalDateTime() : null;
+    }
+
+    public RateRepository(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
     public List<Rate> findLatest() {
         return jdbc.query("""
             SELECT r.* FROM fx_rate r
-            WHERE r.rate_date = (SELECT MAX(rate_date) FROM fx_rate)
+            WHERE r.id = (SELECT r2.id FROM fx_rate r2
+                          WHERE r2.base_code = r.base_code AND r2.quote_code = r.quote_code
+                          ORDER BY r2.captured_at DESC, r2.id DESC
+                          LIMIT 1)
             ORDER BY r.base_code, r.quote_code""", MAPPER);
     }
 
     public Optional<Rate> findLatestForPair(String base, String quote) {
         List<Rate> rows = jdbc.query("""
             SELECT * FROM fx_rate WHERE base_code=? AND quote_code=?
-            ORDER BY rate_date DESC LIMIT 1""", MAPPER, base, quote);
+            ORDER BY captured_at DESC, id DESC LIMIT 1""", MAPPER, base, quote);
         return rows.stream().findFirst();
     }
 
     public int insert(String base, String quote, double rate) {
-        return jdbc.update("INSERT INTO fx_rate (base_code, quote_code, rate, rate_date) VALUES (?,?,?,CURDATE())",
+        return jdbc.update(
+                "INSERT INTO fx_rate (base_code, quote_code, rate, rate_date, captured_at) VALUES (?,?,?,CURDATE(),CURRENT_TIMESTAMP(3))",
                 base, quote, rate);
+    }
+
+    public int insert(IncomingRate tick) {
+        return insert(tick.base(), tick.quote(), tick.rate());
     }
 }

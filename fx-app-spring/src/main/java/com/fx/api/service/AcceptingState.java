@@ -1,0 +1,13 @@
+package com.fx.api.service;
+
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.springframework.stereotype.Component;
+
+@Component
+public class AcceptingState {
+    private final AtomicBoolean accepting = new AtomicBoolean(true);
+
+    public boolean isAccepting() { return accepting.get(); }
+    public boolean set(boolean value) { return accepting.set(value); }
+}
